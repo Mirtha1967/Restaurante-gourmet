@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menú Digital & Sistema QR | Restaurante</title>
+    <title>Le Gourmet | Alta Cocina & Experiencia QR</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -30,46 +30,60 @@
 <body class="h-full text-slate-100 flex flex-col antialiased selection:bg-amber-500 selection:text-slate-950">
 
     <!-- BARRA SUPERIOR / HEADER -->
-    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-serif text-xl font-bold">
-                M
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3 shadow-xl">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-11 h-11 rounded-full bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-amber-400 font-serif text-xl font-bold shadow-inner">
+                    G
+                </div>
+                <div>
+                    <h1 class="font-serif font-bold text-lg text-amber-100 tracking-wide">LE GOURMET</h1>
+                    <p id="table-indicator" class="text-xs text-amber-400/90 font-medium">Mesa no asignada (General)</p>
+                </div>
             </div>
-            <div>
-                <h1 class="font-serif font-bold text-lg text-amber-100">Le Gourmet</h1>
-                <p id="table-indicator" class="text-xs text-slate-400 font-medium">Mesa no asignada (General)</p>
+            <div class="flex items-center space-x-2">
+                <button onclick="callWaiter()" class="bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-300 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="hidden sm:inline">Llamar Camarero</span>
+                </button>
+                <button onclick="toggleCartModal(true)" class="relative bg-amber-500 hover:bg-amber-400 text-slate-950 px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1.5 transition shadow-lg shadow-amber-500/10">
+                    <i class="fa-solid fa-receipt"></i>
+                    <span id="cart-count">0</span>
+                </button>
+                <button onclick="toggleAdminPanel(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-1 transition border border-slate-700">
+                    <i class="fa-solid fa-gear"></i>
+                    <span class="hidden md:inline">Admin</span>
+                </button>
             </div>
-        </div>
-        <div class="flex items-center space-x-2">
-            <!-- Botón Llamar Camarero -->
-            <button onclick="callWaiter()" class="bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-300 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-1.5 transition">
-                <i class="fa-solid fa-bell"></i>
-                <span class="hidden sm:inline">Llamar Camarero</span>
-            </button>
-            <!-- Carrito Comanda -->
-            <button onclick="toggleCartModal(true)" class="relative bg-amber-500 hover:bg-amber-400 text-slate-950 px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1.5 transition shadow-lg shadow-amber-500/10">
-                <i class="fa-solid fa-receipt"></i>
-                <span id="cart-count">0</span>
-            </button>
-            <!-- Acceso Admin -->
-            <button onclick="toggleAdminPanel(true)" class="text-slate-400 hover:text-slate-200 p-2 rounded-full transition">
-                <i class="fa-solid fa-gear"></i>
-            </button>
         </div>
     </header>
 
     <!-- CONTENIDO PRINCIPAL -->
     <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-6 space-y-6">
         
+        <!-- HERO BANNER GOURMET -->
+        <div class="relative bg-gradient-to-r from-slate-900 via-slate-900/90 to-amber-950/40 border border-slate-800 rounded-3xl p-6 md:p-8 overflow-hidden shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="space-y-3 z-10 max-w-lg">
+                <span class="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] uppercase tracking-widest px-3 py-1 rounded-full font-bold">Carta Digital 2026</span>
+                <h2 class="font-serif text-2xl md:text-3xl font-bold text-amber-100 leading-tight">Sabores que Despiertan Sentidos</h2>
+                <p class="text-xs md:text-sm text-slate-400 leading-relaxed">Explore nuestra exclusiva selección culinaria elaborada por el Chef Ejecutivo. Pida directamente a su mesa o solicite la asistencia de nuestro personal.</p>
+            </div>
+            <div class="w-full md:w-48 h-32 rounded-2xl overflow-hidden border border-amber-500/20 shadow-xl flex-shrink-0 bg-slate-950/50 relative">
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10"></div>
+                <div class="w-full h-full flex items-center justify-center text-amber-400/40 font-serif italic text-sm">Le Gourmet</div>
+            </div>
+        </div>
+
         <!-- Buscador y Filtros -->
         <div class="space-y-3">
             <div class="relative">
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500"></i>
-                <input type="text" id="search-input" oninput="filterDishes()" placeholder="Buscar platos, ingredientes o bebidas..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-amber-500/50 transition shadow-inner">
+                <input type="text" id="search-input" oninput="filterDishes()" placeholder="Buscar plato, ingrediente..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-amber-500/50 transition shadow-inner">
             </div>
             <!-- Filtros Rápidos -->
             <div class="flex items-center space-x-2 overflow-x-auto pb-1 text-xs scrollbar-none">
-                <button onclick="setFilter('all')" id="filter-all" class="filter-btn bg-amber-500 text-slate-950 px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition">Todos</button>
+                <span class="text-slate-500 font-medium pl-1 flex items-center space-x-1"><i class="fa-solid fa-filter text-[10px]"></i> <span>Filtros:</span></span>
+                <button onclick="setFilter('all')" id="filter-all" class="filter-btn bg-amber-500 text-slate-950 px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition shadow-sm">Todos</button>
                 <button onclick="setFilter('vegan')" id="filter-vegan" class="filter-btn bg-slate-900 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-full whitespace-nowrap transition">🌱 Vegano</button>
                 <button onclick="setFilter('gluten')" id="filter-gluten" class="filter-btn bg-slate-900 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-full whitespace-nowrap transition">🌾 Sin Gluten</button>
                 <button onclick="setFilter('spicy')" id="filter-spicy" class="filter-btn bg-slate-900 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-full whitespace-nowrap transition">🌶️ Picante</button>
@@ -82,7 +96,7 @@
         </div>
 
         <!-- Lista de Platos -->
-        <div id="dishes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div id="dishes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-12">
             <!-- Cargado dinámicamente -->
         </div>
     </main>
@@ -126,16 +140,16 @@
             </button>
         </div>
         <div class="flex-1 max-w-4xl w-full mx-auto p-4 overflow-y-auto space-y-6">
-            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
                 <h3 class="font-serif text-lg font-semibold text-amber-200">Generador de Códigos QR para Mesas</h3>
                 <p class="text-xs text-slate-400">Selecciona el número de mesa para generar el código QR vinculado directamente a este menú en tu dominio de Vercel.</p>
                 <div class="flex flex-col sm:flex-row gap-3 items-center">
-                    <input type="number" id="qr-table-num" value="1" min="1" max="50" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm w-full sm:w-32 text-center font-bold">
+                    <input type="number" id="qr-table-num" value="1" min="1" max="50" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm w-full sm:w-32 text-center font-bold text-amber-300">
                     <button onclick="generateQRCode()" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-slate-950 px-6 py-2.5 rounded-xl font-bold text-sm transition">
                         Generar QR de Mesa
                     </button>
                 </div>
-                <div id="qrcode-container" class="flex flex-col items-center justify-center p-6 bg-slate-950/80 rounded-xl border border-slate-800/80 space-y-4">
+                <div id="qrcode-container" class="flex flex-col items-center justify-center p-6 bg-slate-950/80 rounded-2xl border border-slate-800/80 space-y-4">
                     <div id="qrcode" class="p-4 bg-white rounded-xl shadow-lg"></div>
                     <p id="qr-url-text" class="text-xs text-slate-400 font-mono"></p>
                 </div>
@@ -145,9 +159,9 @@
 
     <!-- SCRIPT DE CONFIGURACIÓN Y CONEXIÓN CON SUPABASE -->
     <script>
-        // CONFIGURACIÓN DE SUPABASE (Reemplaza con tus credenciales de Supabase)
-       const SUPABASE_URL = 'https://mcmjbjldsyuhzhpmtpgk.supabase.co';
-       const SUPABASE_ANON_KEY = 'sb_publishable_sqPqVqdrIsEKC-WBJhNO-Q_LFtr2iI_';
+        // CONFIGURACIÓN DE SUPABASE
+        const SUPABASE_URL = 'https://mcmjbldsuyhzhpmtpgk.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_sqPqVqdrIsEKC-WBJhNO-Q_LFtr2iI_';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let currentTable = null;
@@ -157,26 +171,23 @@
         let activeCategory = 'all';
         let activeFilter = 'all';
 
-        // Detectar número de mesa desde la URL (ej: tu-web.vercel.app/?mesa=1)
         window.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const tableParam = urlParams.get('mesa') || urlParams.get('table');
             if (tableParam) {
                 currentTable = parseInt(tableParam);
-                document.getElementById('table-indicator').textContent = `Mesa ${currentTable} Activa`;
+                document.getElementById('table-indicator').textContent = `Mesa ${currentTable < 10 ? '0' + currentTable : currentTable} Activa`;
             }
             await loadMenuData();
         });
 
         async function loadMenuData() {
-            // Cargar Categorías desde Supabase
             const { data: catData, error: catError } = await supabaseClient.from('categories').select('*').order('display_order');
             if (!catError && catData) {
                 categories = catData;
                 renderCategories();
             }
 
-            // Cargar Platos desde Supabase
             const { data: dishData, error: dishError } = await supabaseClient.from('dishes').select('*');
             if (!dishError && dishData) {
                 dishes = dishData;
@@ -186,11 +197,11 @@
 
         function renderCategories() {
             const container = document.getElementById('categories-container');
-            let html = `<button onclick="setActiveCategory('all')" class="cat-tab px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${activeCategory === 'all' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-300 border border-slate-800'}">Todas</button>`;
+            let html = `<button onclick="setActiveCategory('all')" class="cat-tab px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${activeCategory === 'all' ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/10' : 'bg-slate-900 text-slate-300 border border-slate-800 hover:border-slate-700'}">Todas</button>`;
             
             categories.forEach(cat => {
                 const isActive = activeCategory === cat.id;
-                html += `<button onclick="setActiveCategory('${cat.id}')" class="cat-tab px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${isActive ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-300 border border-slate-800'}">${cat.name}</button>`;
+                html += `<button onclick="setActiveCategory('${cat.id}')" class="cat-tab px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${isActive ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/10' : 'bg-slate-900 text-slate-300 border border-slate-800 hover:border-slate-700'}">${cat.name}</button>`;
             });
             container.innerHTML = html;
         }
@@ -206,7 +217,7 @@
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.className = "filter-btn bg-slate-900 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-full whitespace-nowrap transition";
             });
-            document.getElementById(`filter-${filter}`).className = "filter-btn bg-amber-500 text-slate-950 px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition";
+            document.getElementById(`filter-${filter}`).className = "filter-btn bg-amber-500 text-slate-950 px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition shadow-sm";
             renderDishes();
         }
 
@@ -225,28 +236,28 @@
             });
 
             if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-500 text-sm">No se encontraron platos disponibles.</div>`;
+                grid.innerHTML = `<div class="col-span-full py-16 text-center text-slate-500 text-sm">No se encontraron platos disponibles en esta selección.</div>`;
                 return;
             }
 
             let html = '';
             filtered.forEach(dish => {
                 html += `
-                    <div class="bg-slate-900 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between space-y-3 hover:border-amber-500/30 transition">
+                    <div class="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between space-y-3 hover:border-amber-500/40 transition shadow-lg">
                         <div class="space-y-1.5">
                             <div class="flex justify-between items-start">
                                 <h3 class="font-serif font-bold text-base text-amber-100">${dish.name}</h3>
                                 <span class="font-bold text-amber-400 text-sm">${dish.price.toFixed(2)} €</span>
                             </div>
-                            <p class="text-xs text-slate-400 line-clamp-2">${dish.description || ''}</p>
+                            <p class="text-xs text-slate-400 leading-relaxed">${dish.description || ''}</p>
                         </div>
-                        <div class="flex items-center justify-between pt-2 border-t border-slate-800/50">
-                            <div class="flex space-x-1.5 text-xs">
-                                ${dish.is_vegan ? '<span title="Vegano">🌱</span>' : ''}
-                                ${dish.is_gluten_free ? '<span title="Sin Gluten">🌾</span>' : ''}
-                                ${dish.is_spicy ? '<span title="Picante">🌶️</span>' : ''}
+                        <div class="flex items-center justify-between pt-3 border-t border-slate-800/60">
+                            <div class="flex space-x-2 text-xs">
+                                ${dish.is_vegan ? '<span title="Vegano" class="bg-emerald-950/60 border border-emerald-800/50 text-emerald-300 px-2 py-0.5 rounded-md">🌱 Vegano</span>' : ''}
+                                ${dish.is_gluten_free ? '<span title="Sin Gluten" class="bg-amber-950/60 border border-amber-800/50 text-amber-300 px-2 py-0.5 rounded-md">🌾 Sin Gluten</span>' : ''}
+                                ${dish.is_spicy ? '<span title="Picante" class="bg-rose-950/60 border border-rose-800/50 text-rose-300 px-2 py-0.5 rounded-md">🌶️ Picante</span>' : ''}
                             </div>
-                            <button onclick='addToCart(${JSON.stringify(dish)})' class="bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold transition">
+                            <button onclick='addToCart(${JSON.stringify(dish)})' class="bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-amber-500/30 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition shadow-sm">
                                 Añadir +
                             </button>
                         </div>
@@ -274,7 +285,7 @@
             let totalPrice = 0;
 
             if (cart.length === 0) {
-                list.innerHTML = `<div class="text-center text-slate-500 py-12 text-sm">Tu comanda está vacía</div>`;
+                list.innerHTML = `<div class="text-center text-slate-500 py-16 text-sm">Tu comanda está vacía</div>`;
                 document.getElementById('cart-total').textContent = '0.00 €';
                 return;
             }
@@ -289,9 +300,9 @@
                             <p class="text-xs text-amber-400 font-bold">${(item.price * item.quantity).toFixed(2)} €</p>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <button onclick="changeQty(${index}, -1)" class="w-7 h-7 bg-slate-900 border border-slate-800 rounded-lg text-xs font-bold">-</button>
+                            <button onclick="changeQty(${index}, -1)" class="w-7 h-7 bg-slate-900 border border-slate-800 rounded-lg text-xs font-bold hover:bg-slate-800">-</button>
                             <span class="text-xs font-bold w-4 text-center">${item.quantity}</span>
-                            <button onclick="changeQty(${index}, 1)" class="w-7 h-7 bg-slate-900 border border-slate-800 rounded-lg text-xs font-bold">+</button>
+                            <button onclick="changeQty(${index}, 1)" class="w-7 h-7 bg-slate-900 border border-slate-800 rounded-lg text-xs font-bold hover:bg-slate-800">+</button>
                         </div>
                     </div>
                 `;
