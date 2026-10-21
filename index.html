@@ -1,382 +1,1420 @@
 <!DOCTYPE html>
-<html lang="es" class="h-full bg-slate-950">
+<html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Le Gourmet | Alta Cocina & Experiencia QR</title>
+    <title>Le Gourmet - Menú Digital Inteligente</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts: Playfair Display & Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
-    <!-- Supabase JS Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- QR Code Generator Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        serif: ['Playfair Display', 'serif'],
+                    colors: {
+                        gold: {
+                            50: '#fbf8ef',
+                            100: '#f5eed9',
+                            200: '#ebdcb0',
+                            300: '#dfc57f',
+                            400: '#d3ae57',
+                            500: '#c59b38',
+                            600: '#ab802d',
+                            700: '#886325',
+                            800: '#6e4f22',
+                            900: '#5b4020',
+                        },
+                        darkBg: '#0f1115',
+                        cardDark: '#181b22',
                     }
                 }
             }
         }
     </script>
+    <!-- Google Fonts: Playfair Display & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QRCode.js library for QR generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #181b22;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #c59b38;
+            border-radius: 3px;
+        }
+    </style>
 </head>
-<body class="h-full text-slate-100 flex flex-col antialiased selection:bg-amber-500 selection:text-slate-950">
+<body class="bg-darkBg text-gray-100 min-h-screen flex flex-col antialiased selection:bg-gold-500 selection:text-black">
 
-    <!-- BARRA SUPERIOR / HEADER -->
-    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3 shadow-xl">
-        <div class="max-w-5xl mx-auto flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-11 h-11 rounded-full bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-amber-400 font-serif text-xl font-bold shadow-inner">
+    <!-- Top Navigation / Header -->
+    <header class="sticky top-0 z-40 bg-darkBg/90 backdrop-blur-md border-b border-gold-500/20 shadow-xl">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- Logo & Brand -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('menu')">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-gold-600 to-gold-400 flex items-center justify-center text-black font-serif font-bold text-xl shadow-lg">
                     G
                 </div>
                 <div>
-                    <h1 class="font-serif font-bold text-lg text-amber-100 tracking-wide">LE GOURMET</h1>
-                    <p id="table-indicator" class="text-xs text-amber-400/90 font-medium">Mesa no asignada (General)</p>
+                    <h1 class="font-serif text-xl sm:text-2xl font-bold tracking-wide text-gold-200">LE GOURMET</h1>
+                    <p class="text-xs text-gold-400 tracking-widest uppercase">Alta Cocina & Experiencia QR</p>
                 </div>
             </div>
-            <div class="flex items-center space-x-2">
-                <button onclick="callWaiter()" class="bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-300 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-1.5 transition">
-                    <i class="fa-solid fa-bell"></i>
-                    <span class="hidden sm:inline">Llamar Camarero</span>
+
+            <!-- Table Indicator & Mode Switcher / Actions -->
+            <div class="flex items-center space-x-3 sm:space-x-4">
+                <div id="tableBadge" class="hidden sm:flex items-center space-x-1.5 bg-gold-500/10 border border-gold-500/30 px-3 py-1.5 rounded-full text-xs font-medium text-gold-300">
+                    <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                    <span id="currentTableDisplay">Mesa: 01</span>
+                </div>
+
+                <!-- Call Waiter Button -->
+                <button onclick="callWaiter()" class="relative flex items-center space-x-1.5 bg-gold-600 hover:bg-gold-500 text-black font-semibold px-3.5 py-2 rounded-xl text-xs sm:text-sm transition-all shadow-md active:scale-95">
+                    <i data-lucide="bell" class="w-4 h-4"></i>
+                    <span class="hidden md:inline">Llamar Camarero</span>
                 </button>
-                <button onclick="toggleCartModal(true)" class="relative bg-amber-500 hover:bg-amber-400 text-slate-950 px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1.5 transition shadow-lg shadow-amber-500/10">
-                    <i class="fa-solid fa-receipt"></i>
-                    <span id="cart-count">0</span>
+
+                <!-- Cart / Order Button -->
+                <button onclick="toggleCartModal(true)" class="relative flex items-center space-x-2 bg-cardDark hover:bg-gold-500/10 border border-gold-500/30 px-3.5 py-2 rounded-xl text-xs sm:text-sm transition-all text-gold-300">
+                    <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Comanda</span>
+                    <span id="cartBadge" class="absolute -top-1.5 -right-1.5 bg-gold-500 text-black text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md hidden">0</span>
                 </button>
-                <button onclick="toggleAdminPanel(true)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-1 transition border border-slate-700">
-                    <i class="fa-solid fa-gear"></i>
-                    <span class="hidden md:inline">Admin</span>
+
+                <!-- Admin Toggle Button -->
+                <button id="adminToggleBtn" onclick="toggleAdminMode()" class="flex items-center space-x-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 py-2 rounded-xl text-xs sm:text-sm transition-all text-gray-300">
+                    <i data-lucide="shield-cog" class="w-4 h-4 text-gold-400"></i>
+                    <span id="adminBtnText" class="hidden md:inline">Modo Admin</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- CONTENIDO PRINCIPAL -->
-    <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-6 space-y-6">
-        
-        <!-- HERO BANNER GOURMET -->
-        <div class="relative bg-gradient-to-r from-slate-900 via-slate-900/90 to-amber-950/40 border border-slate-800 rounded-3xl p-6 md:p-8 overflow-hidden shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
-            <div class="space-y-3 z-10 max-w-lg">
-                <span class="bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] uppercase tracking-widest px-3 py-1 rounded-full font-bold">Carta Digital 2026</span>
-                <h2 class="font-serif text-2xl md:text-3xl font-bold text-amber-100 leading-tight">Sabores que Despiertan Sentidos</h2>
-                <p class="text-xs md:text-sm text-slate-400 leading-relaxed">Explore nuestra exclusiva selección culinaria elaborada por el Chef Ejecutivo. Pida directamente a su mesa o solicite la asistencia de nuestro personal.</p>
-            </div>
-            <div class="w-full md:w-48 h-32 rounded-2xl overflow-hidden border border-amber-500/20 shadow-xl flex-shrink-0 bg-slate-950/50 relative">
-                <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent z-10"></div>
-                <div class="w-full h-full flex items-center justify-center text-amber-400/40 font-serif italic text-sm">Le Gourmet</div>
-            </div>
-        </div>
+    <!-- Main App Container -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
 
-        <!-- Buscador y Filtros -->
-        <div class="space-y-3">
-            <div class="relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500"></i>
-                <input type="text" id="search-input" oninput="filterDishes()" placeholder="Buscar plato, ingrediente..." class="w-full bg-slate-900 border border-slate-800 rounded-2xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-amber-500/50 transition shadow-inner">
-            </div>
-            <!-- Filtros Rápidos -->
-            <div class="flex items-center space-x-2 overflow-x-auto pb-1 text-xs scrollbar-none">
-                <span class="text-slate-500 font-medium pl-1 flex items-center space-x-1"><i class="fa-solid fa-filter text-[10px]"></i> <span>Filtros:</span></span>
-                <button onclick="setFilter('all')" id="filter-all" class="filter-btn bg-amber-500 text-slate-950 px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition shadow-sm">Todos</button>
-                <button onclick="setFilter('vegan')" id="filter-vegan" class="filter-btn bg-slate-900 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-full whitespace-nowrap transition">🌱 Vegano</button>
-                <button onclick="setFilter('gluten')" id="filter-gluten" class="filter-btn bg-slate-900 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-full whitespace-nowrap transition">🌾 Sin Gluten</button>
-                <button onclick="setFilter('spicy')" id="filter-spicy" class="filter-btn bg-slate-900 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-full whitespace-nowrap transition">🌶️ Picante</button>
-            </div>
-        </div>
+        <!-- ================= CUSTOMER MENU VIEW ================= -->
+        <div id="customerView" class="space-y-6">
 
-        <!-- Categorías (Tabs) -->
-        <div id="categories-container" class="flex space-x-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-800/60">
-            <!-- Cargado dinámicamente -->
-        </div>
-
-        <!-- Lista de Platos -->
-        <div id="dishes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 pb-12">
-            <!-- Cargado dinámicamente -->
-        </div>
-    </main>
-
-    <!-- MODAL CARRITO / COMANDA -->
-    <div id="cart-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex justify-end">
-        <div class="bg-slate-900 border-l border-slate-800 w-full max-w-md h-full flex flex-col shadow-2xl">
-            <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-                <h2 class="font-serif font-bold text-lg text-amber-100 flex items-center space-x-2">
-                    <i class="fa-solid fa-receipt text-amber-500"></i>
-                    <span>Comanda de Mesa</span>
-                </h2>
-                <button onclick="toggleCartModal(false)" class="text-slate-400 hover:text-white p-1">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-            <div id="cart-items-list" class="flex-1 overflow-y-auto p-4 space-y-3">
-                <!-- Items -->
-            </div>
-            <div class="p-4 border-t border-slate-800 bg-slate-950/50 space-y-3">
-                <div class="flex justify-between items-center text-sm">
-                    <span class="text-slate-400">Total Estimado</span>
-                    <span id="cart-total" class="font-bold text-amber-400 text-lg">0.00 €</span>
+            <!-- Hero Banner -->
+            <div class="relative rounded-3xl overflow-hidden bg-gradient-to-r from-cardDark via-gray-900 to-cardDark border border-gold-500/20 p-6 sm:p-10 shadow-2xl">
+                <div class="absolute right-0 top-0 bottom-0 w-1/3 opacity-20 bg-cover bg-center hidden lg:block" style="background-image: url('https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=800')"></div>
+                <div class="relative z-10 max-w-2xl space-y-3">
+                    <span class="inline-block bg-gold-500/10 text-gold-400 border border-gold-500/30 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-widest">Carta Digital 2026</span>
+                    <h2 class="font-serif text-3xl sm:text-5xl font-bold text-white leading-tight">Sabores que Despiertan Sentidos</h2>
+                    <p class="text-gray-300 text-sm sm:text-base">Explore nuestra exclusiva selección culinaria elaborada por el Chef Ejecutivo. Pida directamente a su mesa o solicite la asistencia de nuestro personal.</p>
                 </div>
-                <button onclick="submitOrder()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 py-3 rounded-xl font-bold transition shadow-lg shadow-amber-500/20">
-                    Enviar Pedido a Cocina
-                </button>
+            </div>
+
+            <!-- Search & Allergen Filters Bar -->
+            <div class="bg-cardDark p-4 rounded-2xl border border-gold-500/20 space-y-4 shadow-lg">
+                <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
+                    
+                    <!-- Search Input -->
+                    <div class="relative w-full md:w-96">
+                        <i data-lucide="search" class="absolute left-3.5 top-3 w-4 h-4 text-gold-400"></i>
+                        <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Buscar plato, ingrediente..." class="w-full bg-darkBg border border-gold-500/30 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-gold-500 transition-all">
+                    </div>
+
+                    <!-- Allergen Filters -->
+                    <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                        <span class="text-xs text-gold-400 font-semibold mr-1 flex items-center gap-1">
+                            <i data-lucide="filter" class="w-3.5 h-3.5"></i> Filtros:
+                        </span>
+                        <button onclick="toggleAllergenFilter('sin-gluten')" id="filter-sin-gluten" class="allergen-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-darkBg text-gray-300 border border-gray-700 hover:border-gold-500 transition-all">Sin Gluten</button>
+                        <button onclick="toggleAllergenFilter('sin-lactosa')" id="filter-sin-lactosa" class="allergen-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-darkBg text-gray-300 border border-gray-700 hover:border-gold-500 transition-all">Sin Lactosa</button>
+                        <button onclick="toggleAllergenFilter('vegano')" id="filter-vegano" class="allergen-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-darkBg text-gray-300 border border-gray-700 hover:border-gold-500 transition-all">Vegano</button>
+                        <button onclick="toggleAllergenFilter('picante')" id="filter-picante" class="allergen-btn px-3 py-1.5 rounded-lg text-xs font-medium bg-darkBg text-gray-300 border border-gray-700 hover:border-gold-500 transition-all">Picante</button>
+                        <button onclick="resetFilters()" class="px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gold-500/10 text-gold-400 hover:bg-gold-500/20 transition-all">Limpiar</button>
+                    </div>
+                </div>
+
+                <!-- Categories Horizontal Tabs -->
+                <div id="categoryTabs" class="flex overflow-x-auto pb-2 pt-1 gap-2 scrollbar-none border-t border-gold-500/10 pt-3">
+                    <!-- Dynamic Categories will load here -->
+                </div>
+            </div>
+
+            <!-- Dishes Grid Header & Content -->
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 id="currentCategoryTitle" class="font-serif text-2xl font-bold text-white">Todos los Platos</h3>
+                    <span id="dishCount" class="text-xs text-gray-400">0 platos disponibles</span>
+                </div>
+
+                <div id="dishesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic Dishes will load here -->
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- PANEL DE ADMINISTRACIÓN / GENERADOR QR -->
-    <div id="admin-panel" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex flex-col">
-        <div class="bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between">
-            <h2 class="font-serif font-bold text-xl text-amber-100 flex items-center space-x-2">
-                <i class="fa-solid fa-shield-halved text-amber-500"></i>
-                <span>Panel de Gestión y QR</span>
-            </h2>
-            <button onclick="toggleAdminPanel(false)" class="text-slate-400 hover:text-white p-2">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-        </div>
-        <div class="flex-1 max-w-4xl w-full mx-auto p-4 overflow-y-auto space-y-6">
-            <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 space-y-4 shadow-xl">
-                <h3 class="font-serif text-lg font-semibold text-amber-200">Generador de Códigos QR para Mesas</h3>
-                <p class="text-xs text-slate-400">Selecciona el número de mesa para generar el código QR vinculado directamente a este menú en tu dominio de Vercel.</p>
-                <div class="flex flex-col sm:flex-row gap-3 items-center">
-                    <input type="number" id="qr-table-num" value="1" min="1" max="50" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm w-full sm:w-32 text-center font-bold text-amber-300">
-                    <button onclick="generateQRCode()" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-slate-950 px-6 py-2.5 rounded-xl font-bold text-sm transition">
-                        Generar QR de Mesa
+
+        <!-- ================= ADMIN PANEL VIEW ================= -->
+        <div id="adminView" class="hidden space-y-6">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-cardDark p-6 rounded-3xl border border-gold-500/20 shadow-xl">
+                <div>
+                    <span class="bg-red-500/10 text-red-400 border border-red-500/30 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-widest">Panel de Control</span>
+                    <h2 class="font-serif text-3xl font-bold text-white mt-2">Gestión del Restaurante</h2>
+                    <p class="text-gray-400 text-sm">Administre su carta, controle stock en tiempo real, configure mesas y supervise pedidos.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="openAddDishModal()" class="flex items-center space-x-2 bg-gold-600 hover:bg-gold-500 text-black font-semibold px-4 py-2.5 rounded-xl text-sm transition-all shadow-md">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Añadir Nuevo Plato</span>
+                    </button>
+                    <button onclick="resetDataToDefault()" class="flex items-center space-x-2 bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2.5 rounded-xl text-sm transition-all border border-gray-700">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        <span>Restaurar Datos</span>
                     </button>
                 </div>
-                <div id="qrcode-container" class="flex flex-col items-center justify-center p-6 bg-slate-950/80 rounded-2xl border border-slate-800/80 space-y-4">
-                    <div id="qrcode" class="p-4 bg-white rounded-xl shadow-lg"></div>
-                    <p id="qr-url-text" class="text-xs text-slate-400 font-mono"></p>
+            </div>
+
+            <!-- Admin Tabs Navigation -->
+            <div class="flex border-b border-gold-500/25 space-x-6">
+                <button onclick="switchAdminTab('dishes')" id="adminTabBtn-dishes" class="pb-3 border-b-2 border-gold-500 text-gold-400 font-semibold text-sm transition-all flex items-center gap-2">
+                    <i data-lucide="utensils" class="w-4 h-4"></i> Gestión de Platos & Stock
+                </button>
+                <button onclick="switchAdminTab('orders')" id="adminTabBtn-orders" class="pb-3 border-b-2 border-transparent text-gray-400 hover:text-white font-semibold text-sm transition-all flex items-center gap-2 relative">
+                    <i data-lucide="receipt" class="w-4 h-4"></i> Comandas & Llamadas
+                    <span id="ordersCountBadge" class="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span>
+                </button>
+                <button onclick="switchAdminTab('qr')" id="adminTabBtn-qr" class="pb-3 border-b-2 border-transparent text-gray-400 hover:text-white font-semibold text-sm transition-all flex items-center gap-2">
+                    <i data-lucide="qr-code" class="w-4 h-4"></i> Generador de Códigos QR
+                </button>
+            </div>
+
+            <!-- Tab 1: Dishes & Stock Management -->
+            <div id="adminTab-dishes" class="space-y-4">
+                <div class="bg-cardDark rounded-2xl border border-gold-500/20 overflow-hidden shadow-xl">
+                    <div class="p-4 border-b border-gold-500/10 flex items-center justify-between">
+                        <h3 class="font-semibold text-white">Catálogo Completo de Platos</h3>
+                        <div class="w-64">
+                            <input type="text" id="adminSearchInput" oninput="renderAdminDishes()" placeholder="Filtrar platos..." class="w-full bg-darkBg border border-gold-500/30 rounded-lg px-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-gold-500">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-300">
+                            <thead class="bg-darkBg text-gold-400 text-xs uppercase font-semibold border-b border-gold-500/20">
+                                <tr>
+                                    <th class="px-6 py-3">Plato</th>
+                                    <th class="px-6 py-3">Categoría</th>
+                                    <th class="px-6 py-3">Precio</th>
+                                    <th class="px-6 py-3">Estado Stock</th>
+                                    <th class="px-6 py-3 text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminDishesTableBody" class="divide-y divide-gray-800">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Orders & Waiter Calls Management -->
+            <div id="adminTab-orders" class="hidden space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Active Waiter Calls -->
+                    <div class="bg-cardDark p-6 rounded-2xl border border-gold-500/20 shadow-xl space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-serif text-lg font-bold text-white flex items-center gap-2">
+                                <i data-lucide="bell-ring" class="w-5 h-5 text-gold-400 animate-bounce"></i> Llamadas de Camarero Activas
+                            </h3>
+                            <button onclick="clearWaiterCalls()" class="text-xs text-gold-400 hover:underline">Limpiar todas</button>
+                        </div>
+                        <div id="waiterCallsList" class="space-y-3 max-h-96 overflow-y-auto">
+                            <!-- Dynamic calls -->
+                        </div>
+                    </div>
+
+                    <!-- Active Table Orders / Comandas -->
+                    <div class="bg-cardDark p-6 rounded-2xl border border-gold-500/20 shadow-xl space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-serif text-lg font-bold text-white flex items-center gap-2">
+                                <i data-lucide="clipboard-list" class="w-5 h-5 text-gold-400"></i> Comandas de Mesas
+                            </h3>
+                            <span class="text-xs text-gray-400">Actualización en tiempo real</span>
+                        </div>
+                        <div id="adminOrdersList" class="space-y-4 max-h-96 overflow-y-auto">
+                            <!-- Dynamic orders -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: QR Code Generator -->
+            <div id="adminTab-qr" class="hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- QR Config Card -->
+                    <div class="bg-cardDark p-6 rounded-2xl border border-gold-500/20 shadow-xl space-y-4 md:col-span-1">
+                        <h3 class="font-serif text-lg font-bold text-white">Configurar Código QR</h3>
+                        <p class="text-xs text-gray-400">Genere códigos QR únicos para cada mesa del restaurante para que los clientes accedan de inmediato.</p>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gold-400 mb-1">Número de Mesa</label>
+                                <input type="number" id="qrTableNumber" value="1" min="1" max="50" onchange="generateQRCode()" class="w-full bg-darkBg border border-gold-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-gold-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gold-400 mb-1">URL Base del Menú</label>
+                                <input type="text" id="qrBaseUrl" value="" class="w-full bg-darkBg border border-gold-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-gold-500" readonly>
+                            </div>
+                            <button onclick="generateQRCode()" class="w-full bg-gold-600 hover:bg-gold-500 text-black font-semibold py-2.5 rounded-xl text-sm transition-all shadow-md">
+                                Generar QR
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- QR Display & Print Card -->
+                    <div class="bg-cardDark p-6 rounded-2xl border border-gold-500/20 shadow-xl flex flex-col items-center justify-center space-y-4 md:col-span-2 text-center">
+                        <div class="bg-white p-6 rounded-2xl shadow-2xl" id="qrcodeContainer">
+                            <!-- QR Generated here -->
+                        </div>
+                        <div>
+                            <h4 id="qrCardTitle" class="font-serif text-xl font-bold text-white">Mesa 01 - Le Gourmet</h4>
+                            <p class="text-xs text-gray-400 mt-1">Escanee con la cámara del smartphone para ver el menú</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="downloadQRCode()" class="flex items-center gap-2 bg-gold-600 hover:bg-gold-500 text-black font-semibold px-4 py-2 rounded-xl text-xs transition-all shadow-md">
+                                <i data-lucide="download" class="w-4 h-4"></i> Descargar QR PNG
+                            </button>
+                            <button onclick="simulateTableScan()" class="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gold-300 border border-gold-500/30 px-4 py-2 rounded-xl text-xs transition-all">
+                                <i data-lucide="external-link" class="w-4 h-4"></i> Simular Escaneo en esta Mesa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+
+    <!-- ================= MODAL: DISH DETAILS ================= -->
+    <div id="dishModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-cardDark border border-gold-500/30 rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div class="relative h-64 sm:h-72 w-full bg-gray-900">
+                <img id="modalImg" src="" alt="Plato" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400/181b22/c59b38?text=Le+Gourmet'">
+                <button onclick="closeDishModal()" class="absolute top-4 right-4 bg-black/60 hover:bg-black text-white p-2 rounded-full transition-all backdrop-blur-md">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+                <div id="modalCategoryBadge" class="absolute bottom-4 left-4 bg-gold-500 text-black font-bold text-xs uppercase px-3 py-1 rounded-full shadow-lg">
+                    Categoría
+                </div>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 id="modalTitle" class="font-serif text-2xl font-bold text-white">Nombre del Plato</h3>
+                        <p id="modalPrice" class="text-gold-400 font-bold text-xl mt-1">0.00 €</p>
+                    </div>
+                    <div id="modalStockBadge" class="px-3 py-1 rounded-full text-xs font-semibold">Stock</div>
+                </div>
+                
+                <p id="modalDescription" class="text-gray-300 text-sm leading-relaxed">Descripción detallada del plato.</p>
+
+                <!-- Allergens & Attributes -->
+                <div>
+                    <h4 class="text-xs font-semibold text-gold-400 uppercase tracking-wider mb-2">Alérgenos y Atributos</h4>
+                    <div id="modalAllergens" class="flex flex-wrap gap-2">
+                        <!-- Dynamic tags -->
+                    </div>
+                </div>
+
+                <!-- Wine Pairing Suggestion -->
+                <div class="bg-darkBg/80 p-3.5 rounded-2xl border border-gold-500/20 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gold-500/10 flex items-center justify-center text-gold-400 flex-shrink-0">
+                        <i data-lucide="wine" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase font-bold text-gold-500 tracking-wider">Maridaje Sugerido</span>
+                        <p id="modalWine" class="text-xs text-gray-200 font-medium">Vino tinto crianza reserva</p>
+                    </div>
+                </div>
+
+                <!-- Special Notes Input -->
+                <div>
+                    <label class="block text-xs font-medium text-gold-400 mb-1">Notas especiales para cocina (ej. sin cebolla)</label>
+                    <input type="text" id="modalSpecialNotes" placeholder="Ej. Alergia leve a frutos secos..." class="w-full bg-darkBg border border-gold-500/30 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-gold-500">
+                </div>
+
+                <div class="pt-2 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xs text-gray-400">Cantidad:</span>
+                        <div class="flex items-center border border-gold-500/30 rounded-xl bg-darkBg">
+                            <button onclick="adjustModalQty(-1)" class="px-3 py-1.5 text-gold-400 hover:bg-gold-500/10">-</button>
+                            <span id="modalQty" class="px-3 py-1.5 text-sm font-semibold text-white">1</span>
+                            <button onclick="adjustModalQty(1)" class="px-3 py-1.5 text-gold-400 hover:bg-gold-500/10">+</button>
+                        </div>
+                    </div>
+                    <button id="modalAddBtn" onclick="addModalItemToCart()" class="bg-gold-600 hover:bg-gold-500 text-black font-semibold px-6 py-2.5 rounded-xl text-sm transition-all shadow-md flex items-center gap-2">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i> Añadir a Comanda
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT DE CONFIGURACIÓN Y CONEXIÓN CON SUPABASE -->
+
+    <!-- ================= MODAL: CART & ORDER SUMMARY ================= -->
+    <div id="cartModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-end p-0 sm:p-4">
+        <div class="bg-cardDark border-l sm:border border-gold-500/30 w-full max-w-lg h-full sm:h-auto sm:max-h-[90vh] sm:rounded-3xl flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-right duration-200">
+            <div class="p-6 border-b border-gold-500/20 flex items-center justify-between bg-darkBg">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="shopping-bag" class="w-5 h-5 text-gold-400"></i>
+                    <h3 class="font-serif text-xl font-bold text-white">Comanda de Mesa</h3>
+                </div>
+                <button onclick="toggleCartModal(false)" class="text-gray-400 hover:text-white p-2">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Cart Items List -->
+            <div id="cartItemsList" class="flex-grow p-6 overflow-y-auto space-y-4 divide-y divide-gray-800">
+                <!-- Dynamic cart items -->
+            </div>
+
+            <!-- Cart Footer & Send Order -->
+            <div class="p-6 bg-darkBg border-t border-gold-500/20 space-y-4">
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm text-gray-400">
+                        <span>Subtotal</span>
+                        <span id="cartSubtotal">0.00 €</span>
+                    </div>
+                    <div class="flex justify-between text-sm text-gray-400">
+                        <span>IVA (10% incluido)</span>
+                        <span id="cartTax">0.00 €</span>
+                    </div>
+                    <div class="flex justify-between text-lg font-bold text-white pt-2 border-t border-gray-800">
+                        <span>Total</span>
+                        <span id="cartTotal" class="text-gold-400">0.00 €</span>
+                    </div>
+                </div>
+
+                <button onclick="sendOrderToKitchen()" class="w-full bg-gold-600 hover:bg-gold-500 text-black font-bold py-3.5 rounded-xl text-sm transition-all shadow-xl flex items-center justify-center gap-2">
+                    <i data-lucide="send" class="w-4 h-4"></i> Enviar Comanda a Cocina
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= MODAL: ADD / EDIT DISH (ADMIN) ================= -->
+    <div id="editDishModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-cardDark border border-gold-500/30 rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-gold-500/20 pb-3">
+                <h3 id="editModalTitle" class="font-serif text-xl font-bold text-white">Añadir / Editar Plato</h3>
+                <button onclick="closeEditDishModal()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <form id="dishForm" onsubmit="saveDishForm(event)" class="space-y-3">
+                <input type="hidden" id="formDishId">
+                <div>
+                    <label class="block text-xs font-medium text-gold-400 mb-1">Nombre del Plato</label>
+                    <input type="text" id="formName" required class="w-full bg-darkBg border border-gold-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-gold-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gold-400 mb-1">Categoría</label>
+                        <select id="formCategory" class="w-full bg-darkBg border border-gold-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-gold-500">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gold-400 mb-1">Precio (€)</label>
+                        <input type="number" step="0.01" id="formPrice" required class="w-full bg-darkBg border border-gold-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-gold-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gold-400 mb-1">URL de Imagen</label>
+                    <input type="url" id="formImg" required class="w-full bg-darkBg border border-gold-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-gold-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gold-400 mb-1">Descripción Detallada</label>
+                    <textarea id="formDescription" rows="2" class="w-full bg-darkBg border border-gold-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-gold-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gold-400 mb-1">Maridaje Sugerido de Vino</label>
+                    <input type="text" id="formWine" class="w-full bg-darkBg border border-gold-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-gold-500">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-gold-400 mb-1">Alérgenos (separados por coma)</label>
+                        <input type="text" id="formAllergens" placeholder="sin-gluten, vegano" class="w-full bg-darkBg border border-gold-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-gold-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gold-400 mb-1">Estado Stock</label>
+                        <select id="formStock" class="w-full bg-darkBg border border-gold-500/30 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-gold-500">
+                            <option value="true">En Stock (Disponible)</option>
+                            <option value="false">Agotado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pt-3 flex justify-end gap-2">
+                    <button type="button" onclick="closeEditDishModal()" class="bg-gray-800 text-gray-300 px-4 py-2 rounded-xl text-sm">Cancelar</button>
+                    <button type="submit" class="bg-gold-600 hover:bg-gold-500 text-black font-semibold px-5 py-2 rounded-xl text-sm">Guardar Plato</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Notification Toast Message Box -->
+    <div id="toastNotification" class="fixed bottom-6 right-6 z-50 bg-cardDark border border-gold-500 text-white px-5 py-3 rounded-2xl shadow-2xl transition-all duration-300 transform translate-y-24 opacity-0 flex items-center space-x-3">
+        <div id="toastIcon" class="text-gold-400">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <h5 id="toastTitle" class="font-bold text-sm text-gold-300">Notificación</h5>
+            <p id="toastMessage" class="text-xs text-gray-300">Mensaje de prueba.</p>
+        </div>
+    </div>
+
+
+    <!-- Footer -->
+    <footer class="mt-auto bg-cardDark border-t border-gold-500/20 py-8 text-center text-xs text-gray-400 space-y-2">
+        <p class="font-serif text-gold-300 text-sm">Le Gourmet - Experiencia Culinaria Digital Inteligente</p>
+        <p>&copy; 2026 Todos los derechos reservados. Sistema QR optimizado para alta cocina.</p>
+    </footer>
+
+
+    <!-- ================= JAVASCRIPT LOGIC ================= -->
     <script>
-        // CONFIGURACIÓN DE SUPABASE
-        const SUPABASE_URL = 'https://mcmjbldsuyhzhpmtpgk.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_sqPqVqdrIsEKC-WBJhNO-Q_LFtr2iI_';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Default categories configuration
+        const defaultCategories = [
+            { id: 'todos', name: 'Todos' },
+            { id: 'entrantes', name: 'Entrantes' },
+            { id: 'ensaladas-sopas', name: 'Ensaladas & Sopas' },
+            { id: 'platos-frios', name: 'Platos Fríos' },
+            { id: 'carnes', name: 'Carnes' },
+            { id: 'pescados', name: 'Pescados' },
+            { id: 'vegetarianos', name: 'Veganos & Veggies' },
+            { id: 'primeros', name: 'Primeros Platos' },
+            { id: 'segundos', name: 'Segundos Platos' },
+            { id: 'postres', name: 'Postres' },
+            { id: 'bebidas', name: 'Bebidas & Coctelería' },
+            { id: 'infantil', name: 'Menú Infantil' }
+        ];
 
-        let currentTable = null;
-        let categories = [];
-        let dishes = [];
-        let cart = [];
-        let activeCategory = 'all';
-        let activeFilter = 'all';
+        // Default extensive dishes data
+        const defaultDishes = [
+            {
+                id: '1',
+                name: 'Carpaccio de Vieiras con Trufa',
+                category: 'platos-frios',
+                price: 18.50,
+                description: 'Finísimas láminas de vieira gallega marinadas en cítricos, aceite de trufa blanca, alcaparras crujientes y brotes tiernos.',
+                img: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&q=80&w=600',
+                wine: 'Chardonnay Reserva Barrica',
+                allergens: ['sin-gluten', 'sin-lactosa'],
+                inStock: true
+            },
+            {
+                id: '2',
+                name: 'Crema Velouté de Hongos Silvestres',
+                category: 'ensaladas-sopas',
+                price: 12.00,
+                description: 'Selección de boletus y setas de temporada salteadas al brandy, con un toque de crema de leche ecológica y crujiente de almendra.',
+                img: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?auto=format&fit=crop&q=80&w=600',
+                wine: 'Vino Tinto Joven Crianza',
+                allergens: ['sin-gluten'],
+                inStock: true
+            },
+            {
+                id: '3',
+                name: 'Solomillo de Ternera Rossini',
+                category: 'carnes',
+                price: 29.50,
+                description: 'Corte tierno de ternera blanca con medallón de foie gras poêlé, reducción de Oporto y láminas de trufa negra fresca.',
+                img: 'https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&q=80&w=600',
+                wine: 'Ribera del Duero Reserva',
+                allergens: ['sin-gluten'],
+                inStock: true
+            },
+            {
+                id: '4',
+                name: 'Lubina Salvaje a la Sal Marina',
+                category: 'pescados',
+                price: 24.00,
+                description: 'Lomo de lubina fresca horneado en costra de sal de manantial, acompañado de verduras baby al vapor y emulsión de AOVE y limón.',
+                img: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&q=80&w=600',
+                wine: 'Albariño Rías Baixas',
+                allergens: ['sin-gluten', 'sin-lactosa'],
+                inStock: true
+            },
+            {
+                id: '5',
+                name: 'Risotto Cremoso de Azafrán y Setas',
+                category: 'vegetarianos',
+                price: 16.50,
+                description: 'Arroz Carnaroli de grano corto cocinado a fuego lento con azafrán en hebra, parmesano curado 24 meses y setas shiitake.',
+                img: 'https://images.unsplash.com/photo-1633964913295-ceb43826e7c9?auto=format&fit=crop&q=80&w=600',
+                wine: 'Verdejo D.O. Rueda',
+                allergens: ['sin-gluten', 'vegano'],
+                inStock: true
+            },
+            {
+                id: '6',
+                name: 'Croquetas de Jamón Ibérico de Bellota',
+                category: 'entrantes',
+                price: 11.00,
+                description: 'Cremosas croquetas caseras elaboradas con leche fresca de caserío y virutas de auténtico jamón ibérico de bellota.',
+                img: 'https://images.unsplash.com/photo-1541529086526-db283c563270?auto=format&fit=crop&q=80&w=600',
+                wine: 'Manzanilla de Sanlúcar',
+                allergens: [],
+                inStock: true
+            },
+            {
+                id: '7',
+                name: 'Coulant de Chocolate Valrhona 70%',
+                category: 'postres',
+                price: 9.00,
+                description: 'Bizcocho tibio de chocolate negro intenso con corazón fundente, acompañado de helado artesanal de vainilla Bourbon.',
+                img: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?auto=format&fit=crop&q=80&w=600',
+                wine: 'Vino Dulce Pedro Ximénez',
+                allergens: [],
+                inStock: true
+            },
+            {
+                id: '8',
+                name: 'Cóctel Signature Le Gourmet Spritz',
+                category: 'bebidas',
+                price: 10.50,
+                description: 'Infusión de flor de saúco, cava brut reserva, cordial de lima kaffir, agua con gas y hoja de menta fresca.',
+                img: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&q=80&w=600',
+                wine: 'Cóctel de la Casa',
+                allergens: ['sin-gluten', 'sin-lactosa', 'vegano'],
+                inStock: true
+            },
+            {
+                id: '9',
+                name: 'Miniburguer Gourmet con Patatas',
+                category: 'infantil',
+                price: 10.00,
+                description: 'Hamburguesa de ternera 100% seleccionada en pan brioche artesano, queso cheddar fundido y patatas fritas caseras doradas.',
+                img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=600',
+                wine: 'Zumo Natural de Naranja',
+                allergens: [],
+                inStock: true
+            }
+        ];
 
-        window.addEventListener('DOMContentLoaded', async () => {
+        // App State
+        let categories = JSON.parse(localStorage.getItem('restaurant_categories')) || defaultCategories;
+        let dishes = JSON.parse(localStorage.getItem('restaurant_dishes')) || defaultDishes;
+        let cart = JSON.parse(localStorage.getItem('restaurant_cart')) || [];
+        let waiterCalls = JSON.parse(localStorage.getItem('restaurant_waiter_calls')) || [];
+        let orders = JSON.parse(localStorage.getItem('restaurant_orders')) || [];
+        
+        let currentCategory = 'todos';
+        let activeAllergens = [];
+        let searchQuery = '';
+        let currentTable = '01';
+        let isAdminMode = false;
+        let currentDishModalId = null;
+        let modalQtyValue = 1;
+
+        // Initialize application on load
+        window.onload = function() {
+            // Check if table query param exists in URL (e.g. ?mesa=3)
             const urlParams = new URLSearchParams(window.location.search);
-            const tableParam = urlParams.get('mesa') || urlParams.get('table');
-            if (tableParam) {
-                currentTable = parseInt(tableParam);
-                document.getElementById('table-indicator').textContent = `Mesa ${currentTable < 10 ? '0' + currentTable : currentTable} Activa`;
+            if (urlParams.has('mesa')) {
+                currentTable = urlParams.get('mesa');
             }
-            await loadMenuData();
-        });
+            document.getElementById('currentTableDisplay').innerText = `Mesa: ${currentTable}`;
+            document.getElementById('qrTableNumber').value = currentTable;
+            document.getElementById('qrBaseUrl').value = window.location.origin + window.location.pathname;
 
-        async function loadMenuData() {
-            const { data: catData, error: catError } = await supabaseClient.from('categories').select('*').order('display_order');
-            if (!catError && catData) {
-                categories = catData;
-                renderCategories();
+            renderCategoryTabs();
+            renderDishes();
+            updateCartBadge();
+            generateQRCode();
+            lucide.createIcons();
+        };
+
+        // Save state to localStorage
+        function saveData() {
+            localStorage.setItem('restaurant_categories', JSON.stringify(categories));
+            localStorage.setItem('restaurant_dishes', JSON.stringify(dishes));
+            localStorage.setItem('restaurant_cart', JSON.stringify(cart));
+            localStorage.setItem('restaurant_waiter_calls', JSON.stringify(waiterCalls));
+            localStorage.setItem('restaurant_orders', JSON.stringify(orders));
+        }
+
+        // Reset data to defaults
+        function resetDataToDefault() {
+            if(confirm("¿Restaurar platos y categorías predeterminadas?")) {
+                localStorage.clear();
+                categories = [...defaultCategories];
+                dishes = [...defaultDishes];
+                cart = [];
+                waiterCalls = [];
+                orders = [];
+                saveData();
+                renderCategoryTabs();
+                renderDishes();
+                updateCartBadge();
+                showToast("Datos restaurados correctamente", "Sistema");
             }
+        }
 
-            const { data: dishData, error: dishError } = await supabaseClient.from('dishes').select('*');
-            if (!dishError && dishData) {
-                dishes = dishData;
+        // Switch between Customer View and Admin View
+        function toggleAdminMode() {
+            isAdminMode = !isAdminMode;
+            const customerView = document.getElementById('customerView');
+            const adminView = document.getElementById('adminView');
+            const adminBtnText = document.getElementById('adminBtnText');
+
+            if(isAdminMode) {
+                customerView.classList.add('hidden');
+                adminView.classList.remove('hidden');
+                adminBtnText.innerText = 'Ver Menú Cliente';
+                renderAdminDishes();
+                renderAdminOrders();
+                renderWaiterCalls();
+            } else {
+                adminView.classList.add('hidden');
+                customerView.classList.remove('hidden');
+                adminBtnText.innerText = 'Modo Admin';
                 renderDishes();
             }
+            lucide.createIcons();
         }
 
-        function renderCategories() {
-            const container = document.getElementById('categories-container');
-            let html = `<button onclick="setActiveCategory('all')" class="cat-tab px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${activeCategory === 'all' ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/10' : 'bg-slate-900 text-slate-300 border border-slate-800 hover:border-slate-700'}">Todas</button>`;
-            
-            categories.forEach(cat => {
-                const isActive = activeCategory === cat.id;
-                html += `<button onclick="setActiveCategory('${cat.id}')" class="cat-tab px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${isActive ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/10' : 'bg-slate-900 text-slate-300 border border-slate-800 hover:border-slate-700'}">${cat.name}</button>`;
+        // Switch Admin Tabs
+        function switchAdminTab(tabName) {
+            ['dishes', 'orders', 'qr'].forEach(t => {
+                document.getElementById(`adminTab-${t}`).classList.add('hidden');
+                document.getElementById(`adminTabBtn-${t}`).classList.remove('border-gold-500', 'text-gold-400');
+                document.getElementById(`adminTabBtn-${t}`).classList.add('border-transparent', 'text-gray-400');
             });
-            container.innerHTML = html;
+            document.getElementById(`adminTab-${tabName}`).classList.remove('hidden');
+            document.getElementById(`adminTabBtn-${tabName}`).classList.add('border-gold-500', 'text-gold-400');
+            document.getElementById(`adminTabBtn-${tabName}`).classList.remove('border-transparent', 'text-gray-400');
+            
+            if(tabName === 'orders') {
+                renderAdminOrders();
+                renderWaiterCalls();
+            }
+            lucide.createIcons();
         }
 
-        function setActiveCategory(catId) {
-            activeCategory = catId;
-            renderCategories();
+        // ================= CUSTOMER VIEW RENDERING =================
+
+        function renderCategoryTabs() {
+            const container = document.getElementById('categoryTabs');
+            const selectAdmin = document.getElementById('formCategory');
+            
+            container.innerHTML = '';
+            selectAdmin.innerHTML = '';
+
+            categories.forEach(cat => {
+                // Tab for customer menu
+                const isSelected = currentCategory === cat.id;
+                const btn = document.createElement('button');
+                btn.className = `px-4 py-2 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${isSelected ? 'bg-gold-500 text-black font-semibold shadow-lg' : 'bg-darkBg text-gray-300 border border-gray-800 hover:border-gold-500/50'}`;
+                btn.innerHTML = `<span>${cat.name}</span>`;
+                btn.onclick = () => selectCategory(cat.id);
+                container.appendChild(btn);
+
+                // Admin select options
+                if(cat.id !== 'todos') {
+                    const opt = document.createElement('option');
+                    opt.value = cat.id;
+                    opt.innerText = cat.name;
+                    selectAdmin.appendChild(opt);
+                }
+            });
+        }
+
+        function selectCategory(catId) {
+            currentCategory = catId;
+            const catObj = categories.find(c => c.id === catId);
+            document.getElementById('currentCategoryTitle').innerText = catObj ? catObj.name : 'Platos';
+            renderCategoryTabs();
             renderDishes();
         }
 
-        function setFilter(filter) {
-            activeFilter = filter;
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.className = "filter-btn bg-slate-900 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-full whitespace-nowrap transition";
+        function toggleAllergenFilter(allergen) {
+            const index = activeAllergens.indexOf(allergen);
+            const btn = document.getElementById(`filter-${allergen}`);
+            if(index > -1) {
+                activeAllergens.splice(index, 1);
+                btn.classList.remove('bg-gold-500', 'text-black', 'border-gold-500');
+                btn.classList.add('bg-darkBg', 'text-gray-300', 'border-gray-700');
+            } else {
+                activeAllergens.push(allergen);
+                btn.classList.add('bg-gold-500', 'text-black', 'border-gold-500');
+                btn.classList.remove('bg-darkBg', 'text-gray-300', 'border-gray-700');
+            }
+            renderDishes();
+        }
+
+        function resetFilters() {
+            activeAllergens = [];
+            document.querySelectorAll('.allergen-btn').forEach(btn => {
+                btn.classList.remove('bg-gold-500', 'text-black', 'border-gold-500');
+                btn.classList.add('bg-darkBg', 'text-gray-300', 'border-gray-700');
             });
-            document.getElementById(`filter-${filter}`).className = "filter-btn bg-amber-500 text-slate-950 px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition shadow-sm";
+            document.getElementById('searchInput').value = '';
+            searchQuery = '';
+            renderDishes();
+        }
+
+        function handleSearch() {
+            searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
             renderDishes();
         }
 
         function renderDishes() {
-            const grid = document.getElementById('dishes-grid');
-            const searchTxt = document.getElementById('search-input').value.toLowerCase();
+            const grid = document.getElementById('dishesGrid');
+            grid.innerHTML = '';
 
-            let filtered = dishes.filter(d => {
-                const matchCategory = activeCategory === 'all' || d.category_id === activeCategory;
-                const matchSearch = d.name.toLowerCase().includes(searchTxt) || (d.description && d.description.toLowerCase().includes(searchTxt));
-                let matchFilter = true;
-                if (activeFilter === 'vegan') matchFilter = d.is_vegan;
-                if (activeFilter === 'gluten') matchFilter = d.is_gluten_free;
-                if (activeFilter === 'spicy') matchFilter = d.is_spicy;
-                return matchCategory && matchSearch && matchFilter;
+            let filtered = dishes.filter(dish => {
+                // Category filter
+                if(currentCategory !== 'todos' && dish.category !== currentCategory) return false;
+                
+                // Search query filter
+                if(searchQuery && !dish.name.toLowerCase().includes(searchQuery) && !dish.description.toLowerCase().includes(searchQuery)) return false;
+
+                // Allergen filters (dish must match all active allergen filters)
+                if(activeAllergens.length > 0) {
+                    for(let a of activeAllergens) {
+                        if(!dish.allergens || !dish.allergens.includes(a)) return false;
+                    }
+                }
+                return true;
             });
 
-            if (filtered.length === 0) {
-                grid.innerHTML = `<div class="col-span-full py-16 text-center text-slate-500 text-sm">No se encontraron platos disponibles en esta selección.</div>`;
+            document.getElementById('dishCount').innerText = `${filtered.length} platos disponibles`;
+
+            if(filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-16 text-center space-y-3">
+                        <i data-lucide="search-x" class="w-12 h-12 text-gray-600 mx-auto"></i>
+                        <h4 class="font-serif text-lg text-gray-400">No se encontraron platos</h4>
+                        <p class="text-xs text-gray-500">Pruebe a cambiar los filtros de alérgenos o la búsqueda.</p>
+                    </div>
+                `;
+                lucide.createIcons();
                 return;
             }
 
-            let html = '';
             filtered.forEach(dish => {
-                html += `
-                    <div class="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between space-y-3 hover:border-amber-500/40 transition shadow-lg">
-                        <div class="space-y-1.5">
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-serif font-bold text-base text-amber-100">${dish.name}</h3>
-                                <span class="font-bold text-amber-400 text-sm">${dish.price.toFixed(2)} €</span>
-                            </div>
-                            <p class="text-xs text-slate-400 leading-relaxed">${dish.description || ''}</p>
+                const card = document.createElement('div');
+                card.className = `bg-cardDark rounded-3xl border ${dish.inStock ? 'border-gold-500/20 hover:border-gold-500/60' : 'border-red-500/30 opacity-75'} overflow-hidden shadow-xl transition-all duration-300 flex flex-col`;
+                
+                let allergenTagsHtml = '';
+                if(dish.allergens) {
+                    dish.allergens.forEach(alg => {
+                        allergenTagsHtml += `<span class="bg-darkBg/80 border border-gold-500/30 text-gold-300 text-[10px] px-2 py-0.5 rounded-full">${alg}</span>`;
+                    });
+                }
+
+                card.innerHTML = `
+                    <div class="relative h-48 w-full bg-gray-900 cursor-pointer" onclick="openDishModal('${dish.id}')">
+                        <img src="${dish.img}" alt="${dish.name}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" onerror="this.src='https://placehold.co/600x400/181b22/c59b38?text=Le+Gourmet'">
+                        ${!dish.inStock ? '<div class="absolute inset-0 bg-black/60 flex items-center justify-center"><span class="bg-red-600 text-white font-bold text-xs px-3 py-1 rounded-full uppercase tracking-wider">Agotado Temporalmente</span></div>' : ''}
+                        <div class="absolute top-3 right-3 bg-darkBg/80 backdrop-blur-md px-3 py-1 rounded-full text-gold-400 font-bold text-sm border border-gold-500/30">
+                            ${dish.price.toFixed(2)} €
                         </div>
-                        <div class="flex items-center justify-between pt-3 border-t border-slate-800/60">
-                            <div class="flex space-x-2 text-xs">
-                                ${dish.is_vegan ? '<span title="Vegano" class="bg-emerald-950/60 border border-emerald-800/50 text-emerald-300 px-2 py-0.5 rounded-md">🌱 Vegano</span>' : ''}
-                                ${dish.is_gluten_free ? '<span title="Sin Gluten" class="bg-amber-950/60 border border-amber-800/50 text-amber-300 px-2 py-0.5 rounded-md">🌾 Sin Gluten</span>' : ''}
-                                ${dish.is_spicy ? '<span title="Picante" class="bg-rose-950/60 border border-rose-800/50 text-rose-300 px-2 py-0.5 rounded-md">🌶️ Picante</span>' : ''}
-                            </div>
-                            <button onclick='addToCart(${JSON.stringify(dish)})' class="bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-amber-500/30 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition shadow-sm">
-                                Añadir +
+                    </div>
+                    <div class="p-5 flex flex-col flex-grow space-y-3">
+                        <div class="cursor-pointer" onclick="openDishModal('${dish.id}')">
+                            <h4 class="font-serif text-lg font-bold text-white hover:text-gold-400 transition-colors">${dish.name}</h4>
+                            <p class="text-gray-400 text-xs line-clamp-2 mt-1 leading-relaxed">${dish.description}</p>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 pt-1">
+                            ${allergenTagsHtml}
+                        </div>
+                        <div class="pt-3 border-t border-gray-800 flex items-center justify-between mt-auto">
+                            <button onclick="openDishModal('${dish.id}')" class="text-xs text-gold-400 hover:underline flex items-center gap-1">
+                                <i data-lucide="info" class="w-3.5 h-3.5"></i> Ver detalles
+                            </button>
+                            <button onclick="quickAddToCart('${dish.id}')" ${!dish.inStock ? 'disabled' : ''} class="${dish.inStock ? 'bg-gold-600 hover:bg-gold-500 text-black cursor-pointer' : 'bg-gray-800 text-gray-500 cursor-not-allowed'} font-semibold px-3.5 py-1.5 rounded-xl text-xs transition-all shadow-md flex items-center gap-1.5">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Pedir
                             </button>
                         </div>
                     </div>
                 `;
+                grid.appendChild(card);
             });
-            grid.innerHTML = html;
+            lucide.createIcons();
         }
 
-        function addToCart(dish) {
-            const existing = cart.find(item => item.id === dish.id);
-            if (existing) {
-                existing.quantity += 1;
+        // ================= DISH MODAL FUNCTIONS =================
+
+        function openDishModal(dishId) {
+            const dish = dishes.find(d => d.id === dishId);
+            if(!dish) return;
+
+            currentDishModalId = dishId;
+            modalQtyValue = 1;
+            document.getElementById('modalQty').innerText = modalQtyValue;
+
+            document.getElementById('modalImg').src = dish.img;
+            document.getElementById('modalTitle').innerText = dish.name;
+            document.getElementById('modalPrice').innerText = `${dish.price.toFixed(2)} €`;
+            document.getElementById('modalDescription').innerText = dish.description;
+            document.getElementById('modalWine').innerText = dish.wine || 'Sugerencia del sumiller no disponible';
+            document.getElementById('modalSpecialNotes').value = '';
+
+            const catObj = categories.find(c => c.id === dish.category);
+            document.getElementById('modalCategoryBadge').innerText = catObj ? catObj.name : dish.category;
+
+            const stockBadge = document.getElementById('modalStockBadge');
+            if(dish.inStock) {
+                stockBadge.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-green-500/10 text-green-400 border border-green-500/30';
+                stockBadge.innerText = 'Disponible';
+                document.getElementById('modalAddBtn').disabled = false;
+                document.getElementById('modalAddBtn').className = 'bg-gold-600 hover:bg-gold-500 text-black font-semibold px-6 py-2.5 rounded-xl text-sm transition-all shadow-md flex items-center gap-2';
             } else {
-                cart.push({ ...dish, quantity: 1 });
+                stockBadge.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/30';
+                stockBadge.innerText = 'Agotado';
+                document.getElementById('modalAddBtn').disabled = true;
+                document.getElementById('modalAddBtn').className = 'bg-gray-800 text-gray-500 font-semibold px-6 py-2.5 rounded-xl text-sm cursor-not-allowed flex items-center gap-2';
             }
-            updateCartUI();
+
+            const algContainer = document.getElementById('modalAllergens');
+            algContainer.innerHTML = '';
+            if(dish.allergens && dish.allergens.length > 0) {
+                dish.allergens.forEach(alg => {
+                    algContainer.innerHTML += `<span class="bg-darkBg border border-gold-500/30 text-gold-300 text-xs px-3 py-1 rounded-xl">${alg}</span>`;
+                });
+            } else {
+                algContainer.innerHTML = '<span class="text-xs text-gray-500">Sin alérgenos especificados</span>';
+            }
+
+            document.getElementById('dishModal').classList.remove('hidden');
+            lucide.createIcons();
         }
 
-        function updateCartUI() {
-            const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-            document.getElementById('cart-count').textContent = totalCount;
-
-            const list = document.getElementById('cart-items-list');
-            let totalPrice = 0;
-
-            if (cart.length === 0) {
-                list.innerHTML = `<div class="text-center text-slate-500 py-16 text-sm">Tu comanda está vacía</div>`;
-                document.getElementById('cart-total').textContent = '0.00 €';
-                return;
-            }
-
-            let html = '';
-            cart.forEach((item, index) => {
-                totalPrice += item.price * item.quantity;
-                html += `
-                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
-                        <div>
-                            <h4 class="text-sm font-semibold text-amber-100">${item.name}</h4>
-                            <p class="text-xs text-amber-400 font-bold">${(item.price * item.quantity).toFixed(2)} €</p>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="changeQty(${index}, -1)" class="w-7 h-7 bg-slate-900 border border-slate-800 rounded-lg text-xs font-bold hover:bg-slate-800">-</button>
-                            <span class="text-xs font-bold w-4 text-center">${item.quantity}</span>
-                            <button onclick="changeQty(${index}, 1)" class="w-7 h-7 bg-slate-900 border border-slate-800 rounded-lg text-xs font-bold hover:bg-slate-800">+</button>
-                        </div>
-                    </div>
-                `;
-            });
-            list.innerHTML = html;
-            document.getElementById('cart-total').textContent = totalPrice.toFixed(2) + ' €';
+        function closeDishModal() {
+            document.getElementById('dishModal').classList.add('hidden');
         }
 
-        function changeQty(index, delta) {
-            cart[index].quantity += delta;
-            if (cart[index].quantity <= 0) {
-                cart.splice(index, 1);
+        function adjustModalQty(delta) {
+            modalQtyValue += delta;
+            if(modalQtyValue < 1) modalQtyValue = 1;
+            if(modalQtyValue > 20) modalQtyValue = 20;
+            document.getElementById('modalQty').innerText = modalQtyValue;
+        }
+
+        function quickAddToCart(dishId) {
+            const dish = dishes.find(d => d.id === dishId);
+            if(!dish || !dish.inStock) return;
+
+            const notes = '';
+            addToCartAction(dish, 1, notes);
+        }
+
+        function addModalItemToCart() {
+            const dish = dishes.find(d => d.id === currentDishModalId);
+            if(!dish || !dish.inStock) return;
+
+            const notes = document.getElementById('modalSpecialNotes').value.trim();
+            addToCartAction(dish, modalQtyValue, notes);
+            closeDishModal();
+        }
+
+        function addToCartAction(dish, qty, notes) {
+            // Check if exact dish with same notes exists in cart
+            const existingIndex = cart.findIndex(item => item.dishId === dish.id && item.notes === notes);
+            if(existingIndex > -1) {
+                cart[existingIndex].qty += qty;
+            } else {
+                cart.push({
+                    cartId: Date.now() + Math.random().toString(),
+                    dishId: dish.id,
+                    name: dish.name,
+                    price: dish.price,
+                    img: dish.img,
+                    qty: qty,
+                    notes: notes
+                });
             }
-            updateCartUI();
+            saveData();
+            updateCartBadge();
+            showToast(`Añadido: ${dish.name} (${qty}x)`, "Comanda");
+        }
+
+
+        // ================= CART & ORDER FUNCTIONS =================
+
+        function updateCartBadge() {
+            const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+            const badge = document.getElementById('cartBadge');
+            if(totalItems > 0) {
+                badge.innerText = totalItems;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
         }
 
         function toggleCartModal(show) {
-            document.getElementById('cart-modal').classList.toggle('hidden', !show);
-        }
-
-        async function submitOrder() {
-            if (cart.length === 0) return alert('Añade platos antes de enviar.');
-            if (!currentTable) return alert('Por favor, escanea primero el código QR de tu mesa o añádelo en la URL (?mesa=1).');
-
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-            const { error } = await supabaseClient.from('orders').insert([
-                { table_number: currentTable, items: cart, total: total, status: 'pending' }
-            ]);
-
-            if (error) {
-                alert('Error al enviar pedido: ' + error.message);
+            const modal = document.getElementById('cartModal');
+            if(show) {
+                renderCartItems();
+                modal.classList.remove('hidden');
             } else {
-                alert('¡Comanda enviada a cocina con éxito!');
-                cart = [];
-                updateCartUI();
-                toggleCartModal(false);
+                modal.classList.add('hidden');
+            }
+            lucide.createIcons();
+        }
+
+        function renderCartItems() {
+            const container = document.getElementById('cartItemsList');
+            container.innerHTML = '';
+
+            if(cart.length === 0) {
+                container.innerHTML = `
+                    <div class="py-16 text-center space-y-3">
+                        <i data-lucide="shopping-bag" class="w-12 h-12 text-gray-600 mx-auto"></i>
+                        <h4 class="font-serif text-lg text-gray-400">Su comanda está vacía</h4>
+                        <p class="text-xs text-gray-500">Seleccione platos del menú para realizar su pedido.</p>
+                    </div>
+                `;
+                document.getElementById('cartSubtotal').innerText = '0.00 €';
+                document.getElementById('cartTax').innerText = '0.00 €';
+                document.getElementById('cartTotal').innerText = '0.00 €';
+                lucide.createIcons();
+                return;
+            }
+
+            let subtotal = 0;
+
+            cart.forEach(item => {
+                const itemTotal = item.price * item.qty;
+                subtotal += itemTotal;
+
+                const div = document.createElement('div');
+                div.className = 'py-4 flex items-center justify-between gap-4';
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <img src="${item.img}" class="w-14 h-14 rounded-2xl object-cover border border-gold-500/20" onerror="this.src='https://placehold.co/200x200/181b22/c59b38?text=Plato'">
+                        <div>
+                            <h5 class="font-serif font-bold text-white text-sm">${item.name}</h5>
+                            <p class="text-gold-400 text-xs font-semibold">${item.price.toFixed(2)} € c/u</p>
+                            ${item.notes ? `<p class="text-[11px] text-gray-400 italic">Nota: ${item.notes}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div class="flex items-center border border-gold-500/30 rounded-xl bg-darkBg">
+                            <button onclick="updateCartQty('${item.cartId}', -1)" class="px-2.5 py-1 text-gold-400 hover:bg-gold-500/10">-</button>
+                            <span class="px-2.5 py-1 text-xs font-semibold text-white">${item.qty}</span>
+                            <button onclick="updateCartQty('${item.cartId}', 1)" class="px-2.5 py-1 text-gold-400 hover:bg-gold-500/10">+</button>
+                        </div>
+                        <button onclick="removeFromCart('${item.cartId}')" class="text-red-400 hover:text-red-300 p-1">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            const tax = subtotal * 0.0909; // approx 10% VAT included
+            const total = subtotal;
+
+            document.getElementById('cartSubtotal').innerText = `${(subtotal - tax).toFixed(2)} €`;
+            document.getElementById('cartTax').innerText = `${tax.toFixed(2)} €`;
+            document.getElementById('cartTotal').innerText = `${total.toFixed(2)} €`;
+
+            lucide.createIcons();
+        }
+
+        function updateCartQty(cartId, delta) {
+            const item = cart.find(i => i.cartId === cartId);
+            if(!item) return;
+            item.qty += delta;
+            if(item.qty <= 0) {
+                cart = cart.filter(i => i.cartId !== cartId);
+            }
+            saveData();
+            updateCartBadge();
+            renderCartItems();
+        }
+
+        function removeFromCart(cartId) {
+            cart = cart.filter(i => i.cartId !== cartId);
+            saveData();
+            updateCartBadge();
+            renderCartItems();
+        }
+
+        function sendOrderToKitchen() {
+            if(cart.length === 0) return;
+
+            const newOrder = {
+                id: 'ORD-' + Math.floor(1000 + Math.random() * 9000),
+                table: currentTable,
+                items: [...cart],
+                total: cart.reduce((sum, i) => sum + (i.price * i.qty), 0),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                status: 'En Cocina'
+            };
+
+            orders.unshift(newOrder);
+            cart = [];
+            saveData();
+            updateCartBadge();
+            toggleCartModal(false);
+            showToast(`¡Comanda #${newOrder.id} enviada a cocina con éxito!`, "Cocina");
+        }
+
+
+        // ================= WAITER CALLS & ADMIN ORDERS =================
+
+        function callWaiter() {
+            const newCall = {
+                id: Date.now(),
+                table: currentTable,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                status: 'Pendiente'
+            };
+            waiterCalls.unshift(newCall);
+            saveData();
+            showToast(`Camarero avisado para la Mesa ${currentTable}. Acudirá en breves momentos.`, "Atención en Mesa");
+        }
+
+        function clearWaiterCalls() {
+            waiterCalls = [];
+            saveData();
+            renderWaiterCalls();
+            showToast("Llamadas de camarero borradas", "Admin");
+        }
+
+        function renderWaiterCalls() {
+            const list = document.getElementById('waiterCallsList');
+            list.innerHTML = '';
+
+            const badgeCount = document.getElementById('ordersCountBadge');
+            const totalAlerts = waiterCalls.length + orders.filter(o => o.status === 'En Cocina').length;
+            if(totalAlerts > 0) {
+                badgeCount.innerText = totalAlerts;
+                badgeCount.classList.remove('hidden');
+            } else {
+                badgeCount.classList.add('hidden');
+            }
+
+            if(waiterCalls.length === 0) {
+                list.innerHTML = '<p class="text-xs text-gray-500 italic text-center py-4">No hay llamadas de camarero pendientes.</p>';
+                return;
+            }
+
+            waiterCalls.forEach(call => {
+                const div = document.createElement('div');
+                div.className = 'bg-darkBg p-3.5 rounded-2xl border border-gold-500/20 flex items-center justify-between';
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-xl bg-gold-500/10 flex items-center justify-center text-gold-400 font-bold text-xs">
+                            M${call.table}
+                        </div>
+                        <div>
+                            <h5 class="text-white text-xs font-bold">Llamada de Asistencia</h5>
+                            <p class="text-[10px] text-gray-400">Mesa ${call.table} &bull; ${call.time}</p>
+                        </div>
+                    </div>
+                    <button onclick="resolveWaiterCall(${call.id})" class="bg-gold-600 hover:bg-gold-500 text-black font-semibold px-3 py-1.5 rounded-xl text-xs transition-all">
+                        Atender
+                    </button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function resolveWaiterCall(id) {
+            waiterCalls = waiterCalls.filter(c => c.id !== id);
+            saveData();
+            renderWaiterCalls();
+            showToast("Llamada atendida", "Admin");
+        }
+
+        function renderAdminOrders() {
+            const list = document.getElementById('adminOrdersList');
+            list.innerHTML = '';
+
+            if(orders.length === 0) {
+                list.innerHTML = '<p class="text-xs text-gray-500 italic text-center py-4">No hay comandas registradas.</p>';
+                return;
+            }
+
+            orders.forEach(ord => {
+                let itemsListHtml = '';
+                ord.items.forEach(it => {
+                    itemsListHtml += `<li class="text-xs text-gray-300">&bull; ${it.qty}x ${it.name} ${it.notes ? `(Nota: ${it.notes})` : ''}</li>`;
+                });
+
+                const div = document.createElement('div');
+                div.className = 'bg-darkBg p-4 rounded-2xl border border-gold-500/20 space-y-3';
+                div.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-gray-800 pb-2">
+                        <div>
+                            <span class="font-serif font-bold text-white text-sm">Comanda #${ord.id}</span>
+                            <span class="ml-2 text-xs bg-gold-500/10 text-gold-400 px-2 py-0.5 rounded-full border border-gold-500/30">Mesa ${ord.table}</span>
+                        </div>
+                        <span class="text-xs text-gold-400 font-bold">${ord.total.toFixed(2)} €</span>
+                    </div>
+                    <ul class="space-y-1 pl-2">
+                        ${itemsListHtml}
+                    </ul>
+                    <div class="flex items-center justify-between pt-2 border-t border-gray-800 text-xs">
+                        <span class="text-gray-400">${ord.time} &bull; <strong class="text-gold-300">${ord.status}</strong></span>
+                        <div class="flex gap-2">
+                            ${ord.status === 'En Cocina' ? `<button onclick="updateOrderStatus('${ord.id}', 'Servido')" class="bg-gold-600 hover:bg-gold-500 text-black font-semibold px-3 py-1 rounded-lg">Marcar Servido</button>` : '<span class="text-green-400 font-medium">Completado</span>'}
+                            <button onclick="deleteOrder('${ord.id}')" class="text-red-400 hover:text-red-300 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+            lucide.createIcons();
+        }
+
+        function updateOrderStatus(id, status) {
+            const ord = orders.find(o => o.id === id);
+            if(ord) {
+                ord.status = status;
+                saveData();
+                renderAdminOrders();
+                renderWaiterCalls();
+                showToast(`Comanda #${id} marcada como ${status}`, "Cocina");
             }
         }
 
-        async function callWaiter() {
-            const tableNum = currentTable || prompt('Introduce tu número de mesa para llamar al camarero:');
-            if (!tableNum) return;
+        function deleteOrder(id) {
+            orders = orders.filter(o => o.id !== id);
+            saveData();
+            renderAdminOrders();
+            renderWaiterCalls();
+            showToast("Comanda eliminada", "Admin");
+        }
 
-            const { error } = await supabaseClient.from('table_calls').insert([
-                { table_number: parseInt(tableNum), status: 'active' }
-            ]);
 
-            if (!error) {
-                alert(`Un camarero ha sido avisado para la Mesa ${tableNum}.`);
+        // ================= ADMIN DISH MANAGEMENT =================
+
+        function renderAdminDishes() {
+            const tbody = document.getElementById('adminDishesTableBody');
+            tbody.innerHTML = '';
+
+            const query = (document.getElementById('adminSearchInput').value || '').toLowerCase().trim();
+            const filtered = dishes.filter(d => d.name.toLowerCase().includes(query) || d.category.toLowerCase().includes(query));
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-500">No se encontraron platos.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(dish => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-darkBg/50 transition-colors';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 flex items-center space-x-3">
+                        <img src="${dish.img}" class="w-10 h-10 rounded-xl object-cover border border-gold-500/20" onerror="this.src='https://placehold.co/100x100/181b22/c59b38?text=Plato'">
+                        <div>
+                            <div class="font-bold text-white text-sm">${dish.name}</div>
+                            <div class="text-xs text-gray-400 truncate max-w-xs">${dish.description}</div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-xs text-gold-300">${dish.category}</td>
+                    <td class="px-6 py-4 font-semibold text-white">${dish.price.toFixed(2)} €</td>
+                    <td class="px-6 py-4">
+                        <button onclick="toggleDishStock('${dish.id}')" class="px-3 py-1 rounded-full text-xs font-semibold ${dish.inStock ? 'bg-green-500/10 text-green-400 border border-green-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30'}">
+                            ${dish.inStock ? 'En Stock' : 'Agotado'}
+                        </button>
+                    </td>
+                    <td class="px-6 py-4 text-right space-x-2">
+                        <button onclick="openEditDishModal('${dish.id}')" class="text-gold-400 hover:text-gold-300 p-1.5"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                        <button onclick="deleteDish('${dish.id}')" class="text-red-400 hover:text-red-300 p-1.5"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        function toggleDishStock(id) {
+            const dish = dishes.find(d => d.id === id);
+            if(dish) {
+                dish.inStock = !dish.inStock;
+                saveData();
+                renderAdminDishes();
+                showToast(`Stock actualizado para ${dish.name}`, "Admin");
             }
         }
 
-        function toggleAdminPanel(show) {
-            document.getElementById('admin-panel').classList.toggle('hidden', !show);
-            if (show) generateQRCode();
+        function openAddDishModal() {
+            document.getElementById('editModalTitle').innerText = 'Añadir Nuevo Plato';
+            document.getElementById('dishForm').reset();
+            document.getElementById('formDishId').value = '';
+            document.getElementById('editDishModal').classList.remove('hidden');
         }
+
+        function openEditDishModal(id) {
+            const dish = dishes.find(d => d.id === id);
+            if(!dish) return;
+
+            document.getElementById('editModalTitle').innerText = 'Editar Plato';
+            document.getElementById('formDishId').value = dish.id;
+            document.getElementById('formName').value = dish.name;
+            document.getElementById('formCategory').value = dish.category;
+            document.getElementById('formPrice').value = dish.price;
+            document.getElementById('formImg').value = dish.img;
+            document.getElementById('formDescription').value = dish.description;
+            document.getElementById('formWine').value = dish.wine || '';
+            document.getElementById('formAllergens').value = dish.allergens ? dish.allergens.join(', ') : '';
+            document.getElementById('formStock').value = dish.inStock ? 'true' : 'false';
+
+            document.getElementById('editDishModal').classList.remove('hidden');
+        }
+
+        function closeEditDishModal() {
+            document.getElementById('editDishModal').classList.add('hidden');
+        }
+
+        function saveDishForm(event) {
+            event.preventDefault();
+            const id = document.getElementById('formDishId').value;
+            const name = document.getElementById('formName').value;
+            const category = document.getElementById('formCategory').value;
+            const price = parseFloat(document.getElementById('formPrice').value);
+            const img = document.getElementById('formImg').value;
+            const description = document.getElementById('formDescription').value;
+            const wine = document.getElementById('formWine').value;
+            const allergensRaw = document.getElementById('formAllergens').value;
+            const allergens = allergensRaw ? allergensRaw.split(',').map(s => s.trim().toLowerCase()) : [];
+            const inStock = document.getElementById('formStock').value === 'true';
+
+            if(id) {
+                // Edit existing
+                const dish = dishes.find(d => d.id === id);
+                if(dish) {
+                    dish.name = name;
+                    dish.category = category;
+                    dish.price = price;
+                    dish.img = img;
+                    dish.description = description;
+                    dish.wine = wine;
+                    dish.allergens = allergens;
+                    dish.inStock = inStock;
+                }
+                showToast("Plato actualizado correctamente", "Admin");
+            } else {
+                // Create new
+                const newDish = {
+                    id: Date.now().toString(),
+                    name,
+                    category,
+                    price,
+                    img,
+                    description,
+                    wine,
+                    allergens,
+                    inStock
+                };
+                dishes.push(newDish);
+                showToast("Nuevo plato añadido con éxito", "Admin");
+            }
+
+            saveData();
+            closeEditDishModal();
+            renderAdminDishes();
+        }
+
+        function deleteDish(id) {
+            if(confirm("¿Está seguro de eliminar este plato?")) {
+                dishes = dishes.filter(d => d.id !== id);
+                saveData();
+                renderAdminDishes();
+                showToast("Plato eliminado", "Admin");
+            }
+        }
+
+
+        // ================= QR CODE GENERATOR =================
+
+        let qrcodeInstance = null;
 
         function generateQRCode() {
-            const tableNum = document.getElementById('qr-table-num').value;
-            const currentDomain = window.location.origin + window.location.pathname;
-            const tableUrl = `${currentDomain}?mesa=${tableNum}`;
+            const tableNum = document.getElementById('qrTableNumber').value || '1';
+            const baseUrl = document.getElementById('qrBaseUrl').value || window.location.origin + window.location.pathname;
+            const fullUrl = `${baseUrl}?mesa=${tableNum}`;
 
-            document.getElementById('qr-url-text').textContent = tableUrl;
-            document.getElementById('qrcode').innerHTML = '';
-            
-            new QRCode(document.getElementById('qrcode'), {
-                text: tableUrl,
+            document.getElementById('qrCardTitle').innerText = `Mesa ${tableNum.padStart(2, '0')} - Le Gourmet`;
+
+            const container = document.getElementById('qrcodeContainer');
+            container.innerHTML = '';
+
+            qrcodeInstance = new QRCode(container, {
+                text: fullUrl,
                 width: 180,
                 height: 180,
-                colorDark : "#020617",
-                colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
+                colorDark: "#0f1115",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
             });
+        }
+
+        function downloadQRCode() {
+            const imgElement = document.querySelector('#qrcodeContainer img') || document.querySelector('#qrcodeContainer canvas');
+            if(!imgElement) {
+                showToast("Genere el código QR primero", "Error");
+                return;
+            }
+
+            let imageUrl = '';
+            if(imgElement.tagName === 'IMG') {
+                imageUrl = imgElement.src;
+            } else {
+                imageUrl = imgElement.toDataURL("image/png");
+            }
+
+            const tableNum = document.getElementById('qrTableNumber').value || '1';
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = `QR-Mesa-${tableNum}-LeGourmet.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast(`Código QR de la Mesa ${tableNum} descargado`, "QR Generator");
+        }
+
+        function simulateTableScan() {
+            const tableNum = document.getElementById('qrTableNumber').value || '1';
+            currentTable = tableNum;
+            document.getElementById('currentTableDisplay').innerText = `Mesa: ${currentTable}`;
+            if(isAdminMode) toggleAdminMode();
+            showToast(`Simulando acceso desde la Mesa ${tableNum}`, "Vista Cliente");
+        }
+
+
+        // ================= TOAST NOTIFICATION HELPER =================
+
+        function showToast(message, title = 'Notificación') {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastTitle').innerText = title;
+            document.getElementById('toastMessage').innerText = message;
+
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3500);
         }
     </script>
 </body>
