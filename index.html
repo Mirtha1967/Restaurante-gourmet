@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Digital & Sistema QR | Restaurante</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Playfair Display & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- QR Code Generator Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full text-slate-100 flex flex-col antialiased selection:bg-amber-500 selection:text-slate-950">
+
+    <!-- BARRA SUPERIOR / HEADER -->
+    <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-serif text-xl font-bold">
+                M
+            </div>
+            <div>
+                <h1 class="font-serif font-bold text-lg text-amber-100">Le Gourmet</h1>
+                <p id="table-indicator" class="text-xs text-slate-400 font-medium">Mesa no asignada (General)</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <!-- Botón Llamar Camarero -->
+            <button onclick="callWaiter()" class="bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-300 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center space-x-1.5 transition">
+                <i class="fa-solid fa-bell"></i>
+                <span class="hidden sm:inline">Llamar Camarero</span>
+            </button>
+            <!-- Carrito Comanda -->
+            <button onclick="toggleCartModal(true)" class="relative bg-amber-500 hover:bg-amber-400 text-slate-950 px-3.5 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1.5 transition shadow-lg shadow-amber-500/10">
+                <i class="fa-solid fa-receipt"></i>
+                <span id="cart-count">0</span>
+            </button>
+            <!-- Acceso Admin -->
+            <button onclick="toggleAdminPanel(true)" class="text-slate-400 hover:text-slate-200 p-2 rounded-full transition">
+                <i class="fa-solid fa-gear"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-6 space-y-6">
+        
+        <!-- Buscador y Filtros -->
+        <div class="space-y-3">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500"></i>
+                <input type="text" id="search-input" oninput="filterDishes()" placeholder="Buscar platos, ingredientes o bebidas..." class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm focus:outline-none focus:border-amber-500/50 transition shadow-inner">
+            </div>
+            <!-- Filtros Rápidos -->
+            <div class="flex items-center space-x-2 overflow-x-auto pb-1 text-xs scrollbar-none">
+                <button onclick="setFilter('all')" id="filter-all" class="filter-btn bg-amber-500 text-slate-950 px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition">Todos</button>
+                <button onclick="setFilter('vegan')" id="filter-vegan" class="filter-btn bg-slate-900 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-full whitespace-nowrap transition">🌱 Vegano</button>
+                <button onclick="setFilter('gluten')" id="filter-gluten" class="filter-btn bg-slate-900 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-full whitespace-nowrap transition">🌾 Sin Gluten</button>
+                <button onclick="setFilter('spicy')" id="filter-spicy" class="filter-btn bg-slate-900 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-full whitespace-nowrap transition">🌶️ Picante</button>
+            </div>
+        </div>
+
+        <!-- Categorías (Tabs) -->
+        <div id="categories-container" class="flex space-x-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-800/60">
+            <!-- Cargado dinámicamente -->
+        </div>
+
+        <!-- Lista de Platos -->
+        <div id="dishes-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Cargado dinámicamente -->
+        </div>
+    </main>
+
+    <!-- MODAL CARRITO / COMANDA -->
+    <div id="cart-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex justify-end">
+        <div class="bg-slate-900 border-l border-slate-800 w-full max-w-md h-full flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+                <h2 class="font-serif font-bold text-lg text-amber-100 flex items-center space-x-2">
+                    <i class="fa-solid fa-receipt text-amber-500"></i>
+                    <span>Comanda de Mesa</span>
+                </h2>
+                <button onclick="toggleCartModal(false)" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div id="cart-items-list" class="flex-1 overflow-y-auto p-4 space-y-3">
+                <!-- Items -->
+            </div>
+            <div class="p-4 border-t border-slate-800 bg-slate-950/50 space-y-3">
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-slate-400">Total Estimado</span>
+                    <span id="cart-total" class="font-bold text-amber-400 text-lg">0.00 €</span>
+                </div>
+                <button onclick="submitOrder()" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 py-3 rounded-xl font-bold transition shadow-lg shadow-amber-500/20">
+                    Enviar Pedido a Cocina
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL DE ADMINISTRACIÓN / GENERADOR QR -->
+    <div id="admin-panel" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex flex-col">
+        <div class="bg-slate-900 border-b border-slate-800 p-4 flex items-center justify-between">
+            <h2 class="font-serif font-bold text-xl text-amber-100 flex items-center space-x-2">
+                <i class="fa-solid fa-shield-halved text-amber-500"></i>
+                <span>Panel de Gestión y QR</span>
+            </h2>
+            <button onclick="toggleAdminPanel(false)" class="text-slate-400 hover:text-white p-2">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        <div class="flex-1 max-w-4xl w-full mx-auto p-4 overflow-y-auto space-y-6">
+            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 space-y-4">
+                <h3 class="font-serif text-lg font-semibold text-amber-200">Generador de Códigos QR para Mesas</h3>
+                <p class="text-xs text-slate-400">Selecciona el número de mesa para generar el código QR vinculado directamente a este menú en tu dominio de Vercel.</p>
+                <div class="flex flex-col sm:flex-row gap-3 items-center">
+                    <input type="number" id="qr-table-num" value="1" min="1" max="50" class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm w-full sm:w-32 text-center font-bold">
+                    <button onclick="generateQRCode()" class="w-full sm:w-auto bg-amber-500 hover:bg-amber-400 text-slate-950 px-6 py-2.5 rounded-xl font-bold text-sm transition">
+                        Generar QR de Mesa
+                    </button>
+                </div>
+                <div id="qrcode-container" class="flex flex-col items-center justify-center p-6 bg-slate-950/80 rounded-xl border border-slate-800/80 space-y-4">
+                    <div id="qrcode" class="p-4 bg-white rounded-xl shadow-lg"></div>
+                    <p id="qr-url-text" class="text-xs text-slate-400 font-mono"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE CONFIGURACIÓN Y CONEXIÓN CON SUPABASE -->
+    <script>
+        // CONFIGURACIÓN DE SUPABASE (Reemplaza con tus credenciales de Supabase)
+        const SUPABASE_URL = 'https://tu-proyecto.supabase.co';
+        const SUPABASE_ANON_KEY = 'tu-anon-key';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentTable = null;
+        let categories = [];
+        let dishes = [];
+        let cart = [];
+        let activeCategory = 'all';
+        let activeFilter = 'all';
+
+        // Detectar número de mesa desde la URL (ej: tu-web.vercel.app/?mesa=1)
+        window.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tableParam = urlParams.get('mesa') || urlParams.get('table');
+            if (tableParam) {
+                currentTable = parseInt(tableParam);
+                document.getElementById('table-indicator').textContent = `Mesa ${currentTable} Activa`;
+            }
+            await loadMenuData();
+        });
+
+        async function loadMenuData() {
+            // Cargar Categorías desde Supabase
+            const { data: catData, error: catError } = await supabaseClient.from('categories').select('*').order('display_order');
+            if (!catError && catData) {
+                categories = catData;
+                renderCategories();
+            }
+
+            // Cargar Platos desde Supabase
+            const { data: dishData, error: dishError } = await supabaseClient.from('dishes').select('*');
+            if (!dishError && dishData) {
+                dishes = dishData;
+                renderDishes();
+            }
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categories-container');
+            let html = `<button onclick="setActiveCategory('all')" class="cat-tab px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${activeCategory === 'all' ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-300 border border-slate-800'}">Todas</button>`;
+            
+            categories.forEach(cat => {
+                const isActive = activeCategory === cat.id;
+                html += `<button onclick="setActiveCategory('${cat.id}')" class="cat-tab px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${isActive ? 'bg-amber-500 text-slate-950 font-bold' : 'bg-slate-900 text-slate-300 border border-slate-800'}">${cat.name}</button>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function setActiveCategory(catId) {
+            activeCategory = catId;
+            renderCategories();
+            renderDishes();
+        }
+
+        function setFilter(filter) {
+            activeFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.className = "filter-btn bg-slate-900 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-full whitespace-nowrap transition";
+            });
+            document.getElementById(`filter-${filter}`).className = "filter-btn bg-amber-500 text-slate-950 px-3 py-1.5 rounded-full font-semibold whitespace-nowrap transition";
+            renderDishes();
+        }
+
+        function renderDishes() {
+            const grid = document.getElementById('dishes-grid');
+            const searchTxt = document.getElementById('search-input').value.toLowerCase();
+
+            let filtered = dishes.filter(d => {
+                const matchCategory = activeCategory === 'all' || d.category_id === activeCategory;
+                const matchSearch = d.name.toLowerCase().includes(searchTxt) || (d.description && d.description.toLowerCase().includes(searchTxt));
+                let matchFilter = true;
+                if (activeFilter === 'vegan') matchFilter = d.is_vegan;
+                if (activeFilter === 'gluten') matchFilter = d.is_gluten_free;
+                if (activeFilter === 'spicy') matchFilter = d.is_spicy;
+                return matchCategory && matchSearch && matchFilter;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-12 text-center text-slate-500 text-sm">No se encontraron platos disponibles.</div>`;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(dish => {
+                html += `
+                    <div class="bg-slate-900 border border-slate-800/80 rounded-2xl p-4 flex flex-col justify-between space-y-3 hover:border-amber-500/30 transition">
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-serif font-bold text-base text-amber-100">${dish.name}</h3>
+                                <span class="font-bold text-amber-400 text-sm">${dish.price.toFixed(2)} €</span>
+                            </div>
+                            <p class="text-xs text-slate-400 line-clamp-2">${dish.description || ''}</p>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-slate-800/50">
+                            <div class="flex space-x-1.5 text-xs">
+                                ${dish.is_vegan ? '<span title="Vegano">🌱</span>' : ''}
+                                ${dish.is_gluten_free ? '<span title="Sin Gluten">🌾</span>' : ''}
+                                ${dish.is_spicy ? '<span title="Picante">🌶️</span>' : ''}
+                            </div>
+                            <button onclick='addToCart(${JSON.stringify(dish)})' class="bg-amber-500/10 hover:bg-amber-500 text-amber-400 hover:text-slate-950 border border-amber-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold transition">
+                                Añadir +
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            grid.innerHTML = html;
+        }
+
+        function addToCart(dish) {
+            const existing = cart.find(item => item.id === dish.id);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ ...dish, quantity: 1 });
+            }
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cart-count').textContent = totalCount;
+
+            const list = document.getElementById('cart-items-list');
+            let totalPrice = 0;
+
+            if (cart.length === 0) {
+                list.innerHTML = `<div class="text-center text-slate-500 py-12 text-sm">Tu comanda está vacía</div>`;
+                document.getElementById('cart-total').textContent = '0.00 €';
+                return;
+            }
+
+            let html = '';
+            cart.forEach((item, index) => {
+                totalPrice += item.price * item.quantity;
+                html += `
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between">
+                        <div>
+                            <h4 class="text-sm font-semibold text-amber-100">${item.name}</h4>
+                            <p class="text-xs text-amber-400 font-bold">${(item.price * item.quantity).toFixed(2)} €</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="changeQty(${index}, -1)" class="w-7 h-7 bg-slate-900 border border-slate-800 rounded-lg text-xs font-bold">-</button>
+                            <span class="text-xs font-bold w-4 text-center">${item.quantity}</span>
+                            <button onclick="changeQty(${index}, 1)" class="w-7 h-7 bg-slate-900 border border-slate-800 rounded-lg text-xs font-bold">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+            document.getElementById('cart-total').textContent = totalPrice.toFixed(2) + ' €';
+        }
+
+        function changeQty(index, delta) {
+            cart[index].quantity += delta;
+            if (cart[index].quantity <= 0) {
+                cart.splice(index, 1);
+            }
+            updateCartUI();
+        }
+
+        function toggleCartModal(show) {
+            document.getElementById('cart-modal').classList.toggle('hidden', !show);
+        }
+
+        async function submitOrder() {
+            if (cart.length === 0) return alert('Añade platos antes de enviar.');
+            if (!currentTable) return alert('Por favor, escanea primero el código QR de tu mesa o añádelo en la URL (?mesa=1).');
+
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+            const { error } = await supabaseClient.from('orders').insert([
+                { table_number: currentTable, items: cart, total: total, status: 'pending' }
+            ]);
+
+            if (error) {
+                alert('Error al enviar pedido: ' + error.message);
+            } else {
+                alert('¡Comanda enviada a cocina con éxito!');
+                cart = [];
+                updateCartUI();
+                toggleCartModal(false);
+            }
+        }
+
+        async function callWaiter() {
+            const tableNum = currentTable || prompt('Introduce tu número de mesa para llamar al camarero:');
+            if (!tableNum) return;
+
+            const { error } = await supabaseClient.from('table_calls').insert([
+                { table_number: parseInt(tableNum), status: 'active' }
+            ]);
+
+            if (!error) {
+                alert(`Un camarero ha sido avisado para la Mesa ${tableNum}.`);
+            }
+        }
+
+        function toggleAdminPanel(show) {
+            document.getElementById('admin-panel').classList.toggle('hidden', !show);
+            if (show) generateQRCode();
+        }
+
+        function generateQRCode() {
+            const tableNum = document.getElementById('qr-table-num').value;
+            const currentDomain = window.location.origin + window.location.pathname;
+            const tableUrl = `${currentDomain}?mesa=${tableNum}`;
+
+            document.getElementById('qr-url-text').textContent = tableUrl;
+            document.getElementById('qrcode').innerHTML = '';
+            
+            new QRCode(document.getElementById('qrcode'), {
+                text: tableUrl,
+                width: 180,
+                height: 180,
+                colorDark : "#020617",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    </script>
+</body>
+</html>
